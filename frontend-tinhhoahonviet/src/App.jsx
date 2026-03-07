@@ -6,6 +6,13 @@ import { CartProvider } from './context/CartContext';
 import Register from './pages/Register';
 import Cart from './pages/Cart';
 import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import AdminProducts from './pages/AdminProducts';
+import AdminOrders from './pages/AdminOrders';
+import Checkout from './pages/Checkout';
+import MyOrders from './pages/MyOrders';
+import Profile from './pages/Profile';
+import ForgotPassword from './pages/ForgotPassword';
 
 function App() {
   return (
@@ -18,6 +25,13 @@ function App() {
             <Route path="/register" element={<Register />} /> 
             <Route path="/login" element={<Login />} />
             <Route path="/cart" element={<Cart />} />
+            <Route path="/admin/dashboard" element={<Dashboard />} />
+            <Route path="/admin/products" element={<AdminProducts />} />
+            <Route path="/admin/orders" element={<AdminOrders />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/my-orders" element={<MyOrders />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             {}
           </Routes>
         </div>

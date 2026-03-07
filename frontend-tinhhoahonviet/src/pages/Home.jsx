@@ -1,16 +1,19 @@
 import React, { useState, useEffect,useContext } from 'react';
 import axios from 'axios';
 import { CartContext } from '../context/CartContext';
+import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
   const [products, setProducts] = useState([]);
   const [region, setRegion] = useState(''); 
   const { addToCart } = useContext(CartContext);
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        // Nhớ bật server Backend ở port 5000 nhé!
+
         const response = await axios.get(`http://localhost:5000/api/products?region=${region}`);
         setProducts(response.data);
       } catch (error) {
@@ -18,7 +21,21 @@ const Home = () => {
       }
     };
     fetchProducts();
-  }, [region]); // Mỗi khi bạn bấm nút đổi miền, nó sẽ gọi lại API
+  }, [region]); 
+
+  const handleAddToCart = (product) => {
+    const isLoggedIn = localStorage.getItem('token');
+    
+    // Nếu không có Token (Chưa đăng nhập) -> Báo lỗi và đá sang trang Login
+    if (!isLoggedIn) {
+      alert('Vui lòng đăng nhập tài khoản để thêm món này vào giỏ hàng nhé!');
+      navigate('/login'); 
+      return;
+    }
+    
+    // Nếu có Token -> Cho phép thêm bình thường
+    addToCart(product);
+  };
 
   return (
     <div className="container mx-auto p-4 mt-8">
@@ -46,10 +63,10 @@ const Home = () => {
             <p className="text-sm text-gray-500 mb-4 flex-grow italic">Kho: {product.stock} sản phẩm</p>
             <p className="text-red-600 font-bold text-lg mb-4">{product.price.toLocaleString()} VNĐ</p>
             <button 
-  onClick={() => addToCart(product)} 
-  className="w-full bg-red-700 text-white py-2 mt-4 rounded font-bold hover:bg-red-800 transition">
-  Thêm vào giỏ
-</button>
+              onClick={() => handleAddToCart(product)} 
+              className="w-full bg-red-700 text-white py-2 mt-4 rounded font-bold hover:bg-red-800 transition">
+              Thêm vào giỏ
+            </button>
           </div>
         ))}
       </div>

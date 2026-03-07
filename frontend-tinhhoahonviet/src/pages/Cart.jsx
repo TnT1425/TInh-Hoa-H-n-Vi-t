@@ -1,9 +1,10 @@
 import React, { useContext } from 'react';
 import { CartContext } from '../context/CartContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Cart = () => {
   const { cart, removeFromCart, updateQuantity } = useContext(CartContext);
+  const navigate = useNavigate();
 
   // Tính tổng tiền toàn bộ giỏ hàng
   const totalPrice = cart.reduce((total, item) => total + item.price * item.qty, 0);
@@ -77,9 +78,11 @@ const Cart = () => {
             <span className="font-bold">Tổng cộng:</span>
             <span className="font-bold text-red-700">{totalPrice.toLocaleString()} đ</span>
           </div>
-          <button className="w-full bg-red-700 text-white font-bold py-3 rounded-lg hover:bg-red-800 transition shadow-lg text-lg">
-            Tiến Hành Thanh Toán
-          </button>
+          <button 
+              onClick={() => navigate('/checkout')} 
+              className="w-full bg-red-700 text-white font-bold py-4 rounded-lg hover:bg-red-800 transition shadow-lg text-lg uppercase">
+              💳 Tiến Hành Thanh Toán
+            </button>
         </div>
       </div>
     </div>
