@@ -4,7 +4,12 @@ import axios from 'axios';
 const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  const [searchTerm, setSearchTerm] = useState('');
+  const filteredOrders = orders.filter(order => 
+    order._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (order.customerName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (order.phone || "").includes(searchTerm)
+  );
   // 1. Lấy danh sách toàn bộ đơn hàng từ Backend
   const fetchOrders = async () => {
     const token = localStorage.getItem('token');
@@ -63,7 +68,15 @@ const AdminOrders = () => {
     <div className="container mx-auto p-4 mt-8">
       <h1 className="text-3xl font-bold text-red-800 mb-8 border-b-2 border-red-800 pb-2">📦 Quản Lý Đơn Giao Hàng</h1>
 
-      {}
+      <div className="mb-4 print:hidden">
+        <input 
+          type="text" 
+          placeholder="🔍 Tìm theo mã đơn, tên hoặc SĐT..." 
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full md:w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-800"
+        />
+      </div>
       <div className="bg-white rounded-lg shadow-md overflow-x-auto">
         <table className="w-full text-left border-collapse min-w-max">
           <thead>
@@ -80,7 +93,7 @@ const AdminOrders = () => {
             {orders.length === 0 ? (
               <tr><td colSpan="6" className="text-center p-6 text-gray-500 font-bold">Chưa có đơn hàng nào!</td></tr>
             ) : (
-              orders.map((order) => (
+              filteredOrders.map((order) => (
                 <tr key={order._id} className="hover:bg-gray-50 border-b">
                   <td className="p-3 font-mono text-xs text-gray-500">{order._id.substring(0, 8)}...</td>
                   <td className="p-3 text-sm">

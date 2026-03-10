@@ -2,88 +2,102 @@ import React, { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
 
+const HeaderSearch = ({ searchTerm, setSearchTerm }) => {
+  return (
+    <div className="flex-1 max-w-xl mx-4 relative hidden md:block">
+      <input 
+        type="text" 
+        placeholder=" Bạn đang thèm đặc sản gì?" 
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="w-full px-6 py-2.5 rounded-full border border-gray-200 text-gray-700 focus:outline-none focus:border-red-700 focus:ring-1 focus:ring-red-100 shadow-inner bg-gray-50 text-sm transition-all"
+      />
+    </div>
+  );
+};
 
-const Header = () => {
-  const { cart } = useContext(CartContext);
+const Header = ({ searchTerm, setSearchTerm }) => {
   const navigate = useNavigate();
-  const totalItems = cart.reduce((total, item) => total + item.qty, 0);
-
-  const isLoggedIn = localStorage.getItem('token');
-  const userRole = localStorage.getItem('role') || 'customer';
+  const user = JSON.parse(localStorage.getItem('user'));
+  const userRole = user?.role;
+  const { cart } = useContext(CartContext);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('role');
-    alert('Đã đăng xuất thành công!');
-    navigate('/');
-    window.location.reload();
+    localStorage.removeItem('user');
+    alert("Đã đăng xuất!");
+    navigate('/login');
   };
 
   return (
-    <header className="bg-red-800 text-white shadow-md">
-      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <Link to="/" className="text-2xl font-bold font-serif text-yellow-500">
-          🌾 Tinh Hoa Hồn Việt
+    <header className="bg-white shadow-sm sticky top-0 z-50 border-b border-gray-100">
+      <nav className="container mx-auto px-4 py-3 flex items-center justify-between gap-2">
+        <Link to="/" className="flex items-center gap-2 flex-shrink-0">
+          <span className="text-3xl"></span>
+          <span className="text-2xl font-bold text-red-800 tracking-tight hover:text-red-700 transition">
+            Tinh Hoa Hồn Việt
+          </span>
         </Link>
-
-        <nav className="flex space-x-6 items-center font-semibold">
-          <Link to="/" className="hover:text-yellow-300 transition">Khám phá</Link>
-
-          {(!isLoggedIn || ['client', 'customer', 'staff'].includes(userRole)) && (
-            <>
-              <Link to="/cart" className="flex items-center hover:text-yellow-300 transition relative">
-                🛒 Giỏ hàng 
-                <span className="ml-1 bg-yellow-500 text-red-900 px-2 py-0.5 rounded-full text-xs">
-                  {totalItems}
-                </span>
-              </Link>
-              
-              {isLoggedIn && userRole !== 'admin' && (
-                <Link to="/my-orders" className="flex items-center hover:text-yellow-300 transition text-sm">
-                  📝 Đơn của tôi
-                </Link>
-              )}
-            </>
-          )}
-
-          {(userRole === 'staff' || userRole === 'admin') && (
-            <Link to="/admin/orders" className="text-blue-200 hover:text-white transition">
-              📦 QL Đơn Hàng
-            </Link>
-          )}
-
-          {userRole === 'admin' && (
-            <>
-              <Link to="/admin/products" className="text-yellow-200 hover:text-white transition">
-                🛠 QL Sản Phẩm
-              </Link>
-              <Link to="/admin/dashboard" className="text-yellow-200 hover:text-white transition">
-                📊 Thống Kê
-              </Link>
-            </>
-          )}
+        <HeaderSearch searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Link to="/cart" className="relative group p-2 rounded-full hover:bg-gray-100">
+            <span className="text-2xl group-hover:scale-110 block transition">🛒</span>
+            <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full shadow">
+              {cart?.reduce((total, item) => total + item.qty, 0) || 0}
+            </span>
+          </Link>
           
-          {isLoggedIn ? (
-            <div className="flex items-center space-x-3">
-              <Link to="/profile" className="px-4 py-2 border border-yellow-500 rounded text-yellow-500 hover:bg-yellow-500 hover:text-red-900 transition">
-              Hồ sơ cá nhân
-              </Link>
-              <button onClick={handleLogout} className="px-4 py-2 border border-white rounded text-white hover:bg-white hover:text-red-900 transition text-sm">
-                Đăng xuất
-              </button>
+          {user ? (
+            /* Kỹ thuật "group" để nhận diện khi chuột di vào khu vực này */
+            <div className="relative group ml-2 pl-4 border-l border-gray-200">
+              
+              {/* Nút Trigger: Tên người dùng */}
+              <div className="flex items-center gap-2 text-sm font-bold text-red-800 bg-red-50 px-4 py-2 rounded-full cursor-pointer border border-red-100 hover:bg-red-100 transition">
+                Chào, {user.username || user.name} <span className="text-[10px] text-red-500">▼</span>
+              </div>
+
+              {/* Menu Dropdown (Ẩn mặc định, sẽ xổ ra khi di chuột vào group) */}
+              <div className="absolute right-0 top-full pt-2 w-48 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top translate-y-2 group-hover:translate-y-0">
+                <div className="bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden">
+                  
+                  <Link to="/profile" className="block px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-red-50 hover:text-red-700 transition">
+                     Hồ sơ cá nhân
+                  </Link>
+                  
+                  <Link to="/my-orders" className="block px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-red-50 hover:text-red-700 transition">
+                     Đơn của tôi
+                  </Link>
+                  
+                  <div className="border-t border-gray-100"></div>
+                  
+                  <button 
+                    onClick={handleLogout} 
+                    className="w-full text-left px-4 py-3 text-sm font-bold text-red-600 hover:bg-red-50 hover:text-red-800 transition"
+                  >
+                    Đăng xuất
+                  </button>
+                  
+                </div>
+              </div>
+
             </div>
           ) : (
-            <>
-            <Link to="/login" className="px-4 py-2 border border-yellow-500 rounded text-yellow-500 hover:bg-yellow-500 hover:text-red-900 transition">
-              Đăng nhập
-            </Link>
-            <Link to="/register" className="px-4 py-2 border border-yellow-500 rounded text-yellow-500 hover:bg-yellow-500 hover:text-red-900 transition">
-              Đăng ký
-            </Link>
-            </>
-            
+            <div className="flex gap-2 pl-4 border-l border-gray-200 ml-2">
+              <Link to="/login" className="bg-white text-red-800 px-4 py-2 rounded-full text-xs font-bold border border-red-800 hover:bg-red-50 transition">Đăng nhập</Link>
+              <Link to="/register" className="bg-red-800 text-white px-4 py-2 rounded-full text-xs font-bold hover:bg-red-900 transition shadow">Đăng ký</Link>
+            </div>
           )}
-        </nav>
+
+        </div>
+      </nav>
+      <div className="container mx-auto px-4 pb-3 md:hidden">
+        <input 
+          type="text" 
+          placeholder="Bạn đang thèm đặc sản gì?" 
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full px-4 py-2.5 rounded border border-gray-200 focus:outline-none shadow-inner text-sm bg-gray-50"
+        />
       </div>
     </header>
   );

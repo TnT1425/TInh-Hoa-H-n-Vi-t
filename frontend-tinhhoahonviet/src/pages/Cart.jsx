@@ -6,8 +6,17 @@ const Cart = () => {
   const { cart, removeFromCart, updateQuantity } = useContext(CartContext);
   const navigate = useNavigate();
 
-  // Tính tổng tiền toàn bộ giỏ hàng
   const totalPrice = cart.reduce((total, item) => total + item.price * item.qty, 0);
+
+  const handleCheckout = () => {
+    const isLoggedIn = localStorage.getItem('token');
+    if (!isLoggedIn) {
+      alert('Vui lòng đăng nhập tài khoản để tiến hành thanh toán nhé!');
+      navigate('/login'); 
+      return; 
+    }
+    navigate('/checkout');
+  };
 
   // Nếu giỏ hàng trống thì hiện thông báo
   if (cart.length === 0) {
@@ -63,7 +72,6 @@ const Cart = () => {
           </table>
         </div>
 
-        {/* Phần Tổng kết đơn hàng (Bên phải) */}
         <div className="md:w-1/4 bg-white p-6 rounded-lg shadow h-fit border-t-4 border-yellow-500">
           <h2 className="text-xl font-bold mb-4">Tóm tắt đơn hàng</h2>
           <div className="flex justify-between mb-4 text-gray-600">
@@ -79,8 +87,8 @@ const Cart = () => {
             <span className="font-bold text-red-700">{totalPrice.toLocaleString()} đ</span>
           </div>
           <button 
-              onClick={() => navigate('/checkout')} 
-              className="w-full bg-red-700 text-white font-bold py-4 rounded-lg hover:bg-red-800 transition shadow-lg text-lg uppercase">
+              onClick={handleCheckout} 
+              className="w-full bg-red-700 text-white font-bold py-3 rounded-lg hover:bg-red-800 transition shadow-md">
               💳 Tiến Hành Thanh Toán
             </button>
         </div>

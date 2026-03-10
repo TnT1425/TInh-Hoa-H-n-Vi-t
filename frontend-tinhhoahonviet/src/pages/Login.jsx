@@ -5,23 +5,23 @@ import { Link, useNavigate } from 'react-router-dom';
 const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [message, setMessage] = useState('');
-  const navigate = useNavigate(); // Dùng để chuyển trang sau khi đăng nhập thành công
+  const navigate = useNavigate(); 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Gọi API Đăng nhập
       const res = await axios.post('http://localhost:5000/api/auth/login', formData);
       
-      // Lưu lại thẻ căn cước (Token) vào bộ nhớ trình duyệt
       localStorage.setItem('token', res.data.token);
-
-      const userRole = res.data.role || res.data.user?.role || 'client';
-      localStorage.setItem('role', userRole);
+      localStorage.setItem('role', res.data.user?.role || res.data.role || 'customer');
+      localStorage.setItem('user', JSON.stringify(res.data.user));
       
       setMessage('🎉 Đăng nhập thành công!');
-      
-      // Đợi 1.5 giây rồi tự động đẩy khách về Trang chủ
+      if (res.data.user.role === 'admin' || res.data.user.role === 'staff') {
+        window.location.href = '/admin/orders'; // Nếu là Admin/Nhân viên -> Bay thẳng vào trang Quản trị
+      } else {
+        window.location.href = '/'; // Nếu là Khách -> Bay ra Trang chủ mua sắm
+      }
       setTimeout(() => {
         window.location.href = '/'; 
       }, 1500);

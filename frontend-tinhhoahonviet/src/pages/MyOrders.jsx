@@ -6,31 +6,48 @@ const MyOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // 1. KÉO HÀM FETCH RA ĐÂY ĐỂ AI CŨNG GỌI ĐƯỢC
+  const fetchMyOrders = async () => {
+    const token = localStorage.getItem('token');
+    try {
+      const res = await axios.get('http://localhost:5000/api/orders/my-orders', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setOrders(res.data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Lỗi tải lịch sử đơn hàng:', error);
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchMyOrders = async () => {
-      const token = localStorage.getItem('token');
-      try {
-        const res = await axios.get('http://localhost:5000/api/orders/my-orders', {
-          headers: { 
-            Authorization: `Bearer ${token}`,
-            token: `Bearer ${token}` 
-          }
-        });
-        setOrders(res.data);
-        setLoading(false);
-      } catch (error) {
-        console.error('Lỗi tải lịch sử đơn hàng:', error);
-        setLoading(false);
-      }
-    };
     fetchMyOrders();
   }, []);
 
+  // 2. ĐƯA HÀM HỦY ĐƠN VÀO TRONG ĐỂ DÙNG CHUNG fetchMyOrders
+  const handleCancelOrder = async (orderId) => {
+    if (!window.confirm("Bạn có chắc chắn muốn hủy đơn hàng này không?")) return;
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`http://localhost:5000/api/orders/${orderId}/cancel`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert("Hủy đơn thành công!");
+      fetchMyOrders(); // Load lại giao diện mượt mà
+    } catch (error) {
+      alert(error.response?.data?.message || "Lỗi khi hủy đơn");
+    }
+  };
+
   const getStatusBadge = (status) => {
     switch (status) {
-      case 'Pending': return <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-bold">⏳ Chờ xác nhận</span>;
+      case 'Pending': 
+      case 'Chờ xác nhận': 
+        return <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-bold">⏳ Chờ xác nhận</span>;
       case 'Shipping': return <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-bold">🚚 Đang giao hàng</span>;
       case 'Delivered': return <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-bold">✅ Đã nhận hàng</span>;
+      case 'Đã hủy': return <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-bold">❌ Đã hủy</span>;
       default: return <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-bold">{status}</span>;
     }
   };
@@ -73,7 +90,22 @@ const MyOrders = () => {
                   <td className="p-3 text-right font-bold text-red-700 text-lg">
                     {order.totalPrice?.toLocaleString()} đ
                   </td>
-                  <td className="p-3 text-center">{getStatusBadge(order.status)}</td>
+                  
+                  {/* CỘT TRẠNG THÁI VÀ NÚT HỦY ĐƠN */}
+                  <td className="p-3 text-center flex flex-col items-center gap-2">
+                    {getStatusBadge(order.status)}
+                    
+                    {/* CHỈ HIỆN NÚT HỦY KHI ĐANG "CHỜ XÁC NHẬN" */}
+                    {(order.status === 'Pending' || order.status === 'Chờ xác nhận') && (
+                      <button 
+                        onClick={() => handleCancelOrder(order._id)}
+                        className="bg-white border border-red-500 text-red-500 px-3 py-1 rounded hover:bg-red-500 hover:text-white transition text-xs font-bold"
+                      >
+                        Hủy đơn
+                      </button>
+                    )}
+                  </td>
+
                 </tr>
               ))}
             </tbody>

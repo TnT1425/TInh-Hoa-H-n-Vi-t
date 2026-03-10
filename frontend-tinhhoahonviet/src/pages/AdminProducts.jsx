@@ -3,6 +3,10 @@ import axios from 'axios';
 
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const filteredProducts = products.filter(product => 
+  product.name.toLowerCase().includes(searchTerm.toLowerCase())
+);
   const [loading, setLoading] = useState(true);
   
   // Trạng thái bật/tắt Form Thêm/Sửa
@@ -11,7 +15,13 @@ const AdminProducts = () => {
   
   // Dữ liệu của Form
   const [formData, setFormData] = useState({
-    name: '', price: '', region: 'North', stock: '', description: '', image: ''
+    name: '',
+    price: '',
+    description: '',
+    image: '',
+    stock: '',
+    region: '',
+    category: ''
   });
 
   // 1. GIAO DỊCH: Lấy danh sách sản phẩm
@@ -60,7 +70,7 @@ const AdminProducts = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem('token'); // Lấy thẻ Admin
-    const config = { headers: { token: `Bearer ${token}` } };
+    const config = { headers: { token: `Bearer ${token}`,Authorization: `Bearer ${token}` },Authorization: `Bearer ${token}` };
 
     try {
       if (editingId) {
@@ -86,7 +96,7 @@ const AdminProducts = () => {
     const token = localStorage.getItem('token');
     try {
       await axios.delete(`http://localhost:5000/api/products/${id}`, {
-        headers: { token: `Bearer ${token}` }
+        headers: { token: `Bearer ${token}`,Authorization: `Bearer ${token}` }
       });
       alert('Đã xóa thành công!');
       fetchProducts(); // Tải lại bảng
@@ -106,7 +116,6 @@ const AdminProducts = () => {
         </button>
       </div>
 
-      {/* FORM THÊM / SỬA SẢN PHẨM (Nhiều Fields ăn điểm Level cao) */}
       {showForm && (
         <div className="bg-orange-50 p-6 rounded-lg shadow-md mb-8 border border-orange-200">
           <h2 className="text-xl font-bold text-gray-800 mb-4">{editingId ? 'Sửa thông tin Đặc Sản' : 'Khai báo Đặc Sản mới'}</h2>
@@ -127,6 +136,22 @@ const AdminProducts = () => {
                 <option value="South">Miền Nam</option>
               </select>
             </div>
+            <div className="mb-4">
+                <label className="block text-gray-700 font-bold mb-2">Danh mục sản phẩm</label>
+                <select
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:border-red-800"
+                >
+                  <option value="">-- Chọn danh mục --</option>
+                  <option value="Bánh Kẹo">🍬 Bánh Kẹo</option>
+                  <option value="Đồ Khô & Mứt">🌾 Đồ Khô & Mứt</option>
+                  <option value="Trà & Cà Phê">☕ Trà & Cà Phê</option>
+                  <option value="Nước Chấm">🧂 Nước Chấm (Gia vị)</option>
+                  <option value="Quà Tặng">🎁 Quà Tặng</option>
+                  <option value="Khác">📦 Khác</option>
+                </select>
+              </div>
             <div>
               <label className="block text-gray-700 font-semibold mb-1">Số lượng Tồn kho</label>
               <input type="number" name="stock" value={formData.stock} onChange={handleChange} required className="w-full border p-2 rounded" />
@@ -150,7 +175,15 @@ const AdminProducts = () => {
           </form>
         </div>
       )}
-
+      <div className="mb-4">
+        <input 
+          type="text" 
+          placeholder="🔍 Tìm kiếm tên sản phẩm..." 
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full md:w-1/3 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-800"
+        />
+      </div>
       {/* BẢNG DANH SÁCH SẢN PHẨM */}
       <div className="bg-white rounded-lg shadow-md overflow-x-auto">
         <table className="w-full text-left border-collapse">
@@ -165,7 +198,7 @@ const AdminProducts = () => {
             </tr>
           </thead>
           <tbody>
-            {products.map((product) => (
+            {filteredProducts.map((product) => (
               <tr key={product._id} className="hover:bg-gray-50 border-b">
                 <td className="p-3">
                   <img src={product.image || 'https://placehold.co/80x80?text=No+Img'} alt={product.name} className="w-16 h-16 object-cover rounded shadow-sm" />

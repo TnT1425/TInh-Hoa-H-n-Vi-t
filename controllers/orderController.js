@@ -86,7 +86,26 @@ const orderController = {
     } catch (error) {
       res.status(500).json({ message: 'Lỗi lấy lịch sử đơn', error });
     }
+  },
+  cancelOrder: async (req, res) => {
+    try {
+      const order = await Order.findById(req.params.id);
+      if (!order) return res.status(404).json({ message: 'Không tìm thấy đơn hàng!' });
+
+      // Chỉ cho phép hủy nếu đơn đang chờ xác nhận
+      if (order.status !== 'Chờ xác nhận' && order.status !== 'Pending') {
+        return res.status(400).json({ message: 'Chỉ có thể hủy đơn hàng đang chờ xác nhận!' });
+      }
+
+      order.status = 'Cancelled'; // Cập nhật trạng thái
+      await order.save();
+
+      res.json({ message: 'Đã hủy đơn hàng thành công!', order });
+    } catch (error) {
+      res.status(500).json({ message: 'Lỗi server khi hủy đơn' });
+    }
   }
 };
+
 
 module.exports = orderController;

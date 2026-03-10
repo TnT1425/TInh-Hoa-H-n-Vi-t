@@ -15,7 +15,7 @@ const Checkout = () => {
           const res = await axios.get('http://localhost:5000/api/auth/profile', {
             headers: { Authorization: `Bearer ${token}`, token: `Bearer ${token}` }
           });
-          // Tự động nhét data vào form
+          
           setShippingInfo({
             fullName: res.data.name || '',
             phone: res.data.phone || '',
@@ -56,21 +56,19 @@ const Checkout = () => {
         }))
       };
 
-      // Gửi đơn hàng lên Backend
       await axios.post('http://localhost:5000/api/orders', orderData, {
         headers: { token: `Bearer ${token}`,
         Authorization: `Bearer ${token}` }
       });
 
-      alert('🎉 Đặt hàng thành công! Đơn hàng đã được chuyển cho Admin.');
-      clearCart(); // Dọn sạch giỏ hàng
-      navigate('/cart'); // Tạm quay về giỏ (hoặc trang chủ) để thấy giỏ đã trống
+      alert('🎉 Đặt hàng thành công!');
+      clearCart(); 
+      navigate('/cart'); 
     } catch (error) {
       alert('❌ Lỗi đặt hàng: ' + (error.response?.data?.message || 'Vui lòng thử lại'));
     }
   };
 
-  // Chặn không cho thanh toán nếu giỏ trống
   if (cart.length === 0) {
     return (
       <div className="text-center mt-20">
@@ -85,7 +83,6 @@ const Checkout = () => {
       <h1 className="text-3xl font-bold text-red-800 mb-8 border-b-2 border-red-800 pb-2">Thanh Toán Đơn Hàng</h1>
       
       <div className="flex flex-col md:flex-row gap-8">
-        {/* CỘT TRÁI: Form điền thông tin */}
         <div className="md:w-2/3 bg-white p-6 rounded-lg shadow-md border border-gray-100">
           <h2 className="text-xl font-bold mb-6 text-gray-700">Thông tin giao hàng</h2>
           <form onSubmit={handlePlaceOrder} className="space-y-5" id="checkout-form">
@@ -113,7 +110,6 @@ const Checkout = () => {
           </form>
         </div>
 
-        {/* CỘT PHẢI: Tóm tắt hóa đơn */}
         <div className="md:w-1/3 bg-orange-50 p-6 rounded-lg shadow-md h-fit border-t-4 border-yellow-500">
           <h2 className="text-xl font-bold mb-4 text-red-800">Đơn hàng của bạn</h2>
           <div className="max-h-60 overflow-y-auto mb-4 border-b border-orange-200 pb-4 pr-2">
