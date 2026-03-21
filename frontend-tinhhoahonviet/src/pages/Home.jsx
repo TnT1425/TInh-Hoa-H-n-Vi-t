@@ -3,9 +3,7 @@ import axios from 'axios';
 import { Link, useNavigate, useOutletContext } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
 
-// ==========================================
 // COMPONENT PHỤ: BĂNG CHUYỀN SCROLL NGANG (Carousel)
-// ==========================================
 const HorizontalCarousel = ({ title, products, handleAddToCart, onViewAll }) => {
   const scrollRef = useRef(null);
 
@@ -100,9 +98,7 @@ const HorizontalCarousel = ({ title, products, handleAddToCart, onViewAll }) => 
   );
 };
 
-// ==========================================
 // COMPONENT CHÍNH: TRANG CHỦ
-// ==========================================
 const Home = () => {
   const context = useOutletContext();
   const searchTerm = context?.searchTerm || "";
@@ -271,9 +267,9 @@ const Home = () => {
               {activeCategory === "Tất cả" && (
                 <>
                   <HorizontalCarousel title="🔥 Nổi Bật" products={topSelling} handleAddToCart={handleAddToCart} /> 
-                  <HorizontalCarousel title="🍁 Đặc Sản Miền Bắc" products={northProducts} handleAddToCart={handleAddToCart} onViewAll={() => setActiveCategory("Miền Bắc")} />
-                  <HorizontalCarousel title="☀️ Đặc Sản Miền Trung" products={centralProducts} handleAddToCart={handleAddToCart} onViewAll={() => setActiveCategory("Miền Trung")} />
-                  <HorizontalCarousel title="🍬 BÁNH KẸO TRUYỀN THỐNG" products={candyProducts} handleAddToCart={handleAddToCart} onViewAll={() => setActiveCategory("Bánh Kẹo")} />
+                  <HorizontalCarousel title=" Đặc Sản Miền Bắc" products={northProducts} handleAddToCart={handleAddToCart} onViewAll={() => setActiveCategory("Miền Bắc")} />
+                  <HorizontalCarousel title=" Đặc Sản Miền Trung" products={centralProducts} handleAddToCart={handleAddToCart} onViewAll={() => setActiveCategory("Miền Trung")} />
+                  <HorizontalCarousel title=" BÁNH KẸO TRUYỀN THỐNG" products={candyProducts} handleAddToCart={handleAddToCart} onViewAll={() => setActiveCategory("Bánh Kẹo")} />
                 </>
               )}
 
@@ -319,7 +315,7 @@ const Home = () => {
                   )}
                 </div>
 
-                {/* 👉 NÚT XEM TẤT CẢ CỦA LƯỚI SẢN PHẨM CHÍNH */}
+                {/* NÚT XEM TẤT CẢ CỦA LƯỚI SẢN PHẨM CHÍNH */}
                 {visibleCount < filteredProductsByCategory.length && (
                   <div className="mt-10 text-center">
                     <button 

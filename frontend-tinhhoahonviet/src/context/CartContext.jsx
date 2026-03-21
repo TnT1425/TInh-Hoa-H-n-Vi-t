@@ -19,7 +19,7 @@ const getUserIdFromToken = () => {
 export const CartProvider = ({ children }) => {
   // 1. Tạo "Chìa khóa" ngăn kéo riêng cho từng tài khoản
   const userId = getUserIdFromToken();
-  const cartStorageKey = `cartData_${userId}`; // Kết quả: cartData_64a1b2c3...
+  const cartStorageKey = `cartData_${userId}`;
 
   // 2. Mở đúng ngăn kéo của người đó ra để lấy giỏ hàng
   const [cart, setCart] = useState(() => {
@@ -57,7 +57,7 @@ export const CartProvider = ({ children }) => {
 
   const clearCart = () => {
     setCart([]);
-    localStorage.removeItem(cartStorageKey); // Thanh toán xong thì xóa đúng ngăn của người này
+    localStorage.removeItem(cartStorageKey); 
   };
 
   return (

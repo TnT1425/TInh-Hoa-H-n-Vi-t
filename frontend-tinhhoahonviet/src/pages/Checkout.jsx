@@ -3,6 +3,7 @@ import { CartContext } from '../context/CartContext';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 
+
 const Checkout = () => {
   const { cart, clearCart } = useContext(CartContext);
   const navigate = useNavigate();
@@ -15,7 +16,7 @@ const Checkout = () => {
           const res = await axios.get('http://localhost:5000/api/auth/profile', {
             headers: { Authorization: `Bearer ${token}`, token: `Bearer ${token}` }
           });
-          
+
           setShippingInfo({
             fullName: res.data.name || '',
             phone: res.data.phone || '',
@@ -30,6 +31,8 @@ const Checkout = () => {
   }, []);
 
   const totalPrice = cart.reduce((total, item) => total + item.price * item.qty, 0);
+  const [paymentMethod, setPaymentMethod] = useState('COD');
+
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
@@ -43,12 +46,11 @@ const Checkout = () => {
     }
 
     try {
-      // ĐÓNG GÓI DỮ LIỆU CHUẨN 100% THEO BACKEND CỦA BẠN
       const orderData = {
         customerName: shippingInfo.fullName,
         phone: shippingInfo.phone,
         address: shippingInfo.address,
-        paymentMethod: 'COD',
+        paymentMethod: paymentMethod,
         items: cart.map(item => ({ 
           product: item._id, 
           qty: item.qty, 
@@ -61,7 +63,7 @@ const Checkout = () => {
         Authorization: `Bearer ${token}` }
       });
 
-      alert('🎉 Đặt hàng thành công!');
+      alert(' Đặt hàng thành công!');
       clearCart(); 
       navigate('/cart'); 
     } catch (error) {
@@ -101,12 +103,83 @@ const Checkout = () => {
               <textarea required className="w-full border p-3 rounded bg-gray-50 focus:bg-white h-24" placeholder="Số nhà, Tên đường, Phường/Xã..."
                 value={shippingInfo.address} onChange={(e) => setShippingInfo({...shippingInfo, address: e.target.value})}></textarea>
             </div>
-            <div>
-              <label className="block text-gray-700 font-bold mb-1">Phương thức thanh toán</label>
-              <select className="w-full border p-3 rounded bg-gray-100 text-gray-700 cursor-not-allowed">
-                <option value="COD">Thanh toán khi nhận hàng (COD)</option>
-              </select>
+            {/* ==========================================
+            KHU VỰC CHỌN PHƯƠNG THỨC THANH TOÁN
+            ========================================== */}
+        <div className="mb-8 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <h3 className="text-xl font-bold text-gray-800 mb-4 border-l-4 border-red-700 pl-3">
+            Phương thức thanh toán
+          </h3>
+          
+          <div className="space-y-3">
+            {/* Lựa chọn 1: Tiền mặt (COD) */}
+            <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all ${paymentMethod === 'COD' ? 'border-red-700 bg-red-50 shadow-sm' : 'border-gray-200 hover:bg-gray-50'}`}>
+              <input 
+                type="radio" 
+                name="payment" 
+                value="COD" 
+                checked={paymentMethod === 'COD'} 
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="mr-4 w-5 h-5 accent-red-700"
+              />
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">💵</span>
+                <div>
+                  <p className="font-bold text-gray-800">Thanh toán khi nhận hàng (COD)</p>
+                  <p className="text-sm text-gray-500">Khách hàng thanh toán bằng tiền mặt cho nhân viên giao hàng.</p>
+                </div>
+              </div>
+            </label>
+
+            {/* Lựa chọn 2: Chuyển khoản QR */}
+            <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all ${paymentMethod === 'Banking' ? 'border-blue-700 bg-blue-50 shadow-sm' : 'border-gray-200 hover:bg-gray-50'}`}>
+              <input 
+                type="radio" 
+                name="payment" 
+                value="Banking" 
+                checked={paymentMethod === 'Banking'} 
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="mr-4 w-5 h-5 accent-blue-700"
+              />
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">🏦</span>
+                <div>
+                  <p className="font-bold text-gray-800">Chuyển khoản / Quét mã QR</p>
+                  <p className="text-sm text-gray-500">Mở App ngân hàng bất kỳ để quét mã. Tự động xác nhận.</p>
+                </div>
+              </div>
+            </label>
+          </div>
+
+          {paymentMethod === 'Banking' && (
+            <div className="mt-5 p-5 bg-white border-2 border-dashed border-blue-300 rounded-xl text-center">
+              <h4 className="font-bold text-blue-800 mb-2 uppercase text-sm tracking-wide">Quét mã để thanh toán</h4>
+              
+              {/* API VIETQR TỰ ĐỘNG TẠO MÃ */}
+              {/* Cú pháp: https://img.vietqr.io/image/<Mã_Ngân_Hàng>-<Số_Tài_Khoản>-print.png?amount=<Số_Tiền>&addInfo=<Nội_Dung>&accountName=<Tên_Chủ_TK> */}
+              <img 
+                src={`https://img.vietqr.io/image/MB-020520048668-print.png?amount=${totalPrice}&addInfo=Thanh toan don hang Tinh Hoa Hon Viet&accountName=TRAN NGOC TRUNG`} 
+                alt="QR Thanh Toán" 
+                className="mx-auto w-56 h-56 object-contain rounded-lg shadow-sm border border-gray-100"
+              />
+              
+              <div className="mt-4 text-left bg-blue-50 p-4 rounded-lg text-sm text-blue-900 border border-blue-100 grid grid-cols-3 gap-2">
+                <p className="col-span-1 text-gray-500 font-medium">Ngân hàng:</p>
+                <p className="col-span-2 font-bold">MB Bank</p>
+                
+                <p className="col-span-1 text-gray-500 font-medium">Chủ tài khoản:</p>
+                <p className="col-span-2 font-bold uppercase">TRAN NGOC TRUNG</p>
+                
+                <p className="col-span-1 text-gray-500 font-medium">Số tài khoản:</p>
+                <p className="col-span-2 font-bold text-lg tracking-wider">020520048668</p>
+                
+                <p className="col-span-1 text-gray-500 font-medium">Số tiền cần CK:</p>
+                <p className="col-span-2 font-bold text-red-600 text-lg">{totalPrice.toLocaleString()} VNĐ</p>
+              </div>
+              <p className="text-xs text-red-500 font-medium mt-3 italic">* Vui lòng không thay đổi nội dung chuyển khoản để hệ thống duyệt tự động.</p>
             </div>
+          )}
+        </div>
           </form>
         </div>
 
