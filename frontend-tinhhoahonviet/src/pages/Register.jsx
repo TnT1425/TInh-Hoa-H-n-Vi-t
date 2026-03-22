@@ -17,6 +17,13 @@ const Register = () => {
     }
   };
 
+  const handlePhoneChange = (e) => {
+    const value = e.target.value.replace(/\D/g, '');
+    if (value.length <= 10) {
+      setProfile({ ...profile, phone: value }); 
+    }
+  };
+
   return (
     <div className="container mx-auto p-4 mt-10 max-w-md">
       <div className="bg-white p-8 rounded-lg shadow-lg border-t-4 border-red-700">
@@ -29,8 +36,7 @@ const Register = () => {
           <input type="password" placeholder="Mật khẩu" required className="w-full border p-3 rounded bg-gray-50"
             onChange={(e) => setFormData({...formData, password: e.target.value})} />
           <input type="tel" placeholder="Số điện thoại" required className="w-full border p-3 rounded bg-gray-50"
-            onChange={(e) => setFormData({...formData, phone: e.target.value})} />
-
+            onChange={handlePhoneChange} />
           <button className="w-full bg-red-700 text-white font-bold py-3 rounded hover:bg-red-800 transition">
             Đăng Ký
           </button>

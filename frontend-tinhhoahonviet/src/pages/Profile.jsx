@@ -66,6 +66,12 @@ const Profile = () => {
   };
 
   if (loading) return <div className="text-center mt-20 text-xl font-bold">⏳ Đang tải thông tin...</div>;
+  const handlePhoneChange = (e) => {
+    const value = e.target.value.replace(/\D/g, '');
+    if (value.length <= 10) {
+      setProfile({ ...profile, phone: value }); 
+    }
+  };
 
   return (
     <div className="container mx-auto p-4 mt-8 max-w-4xl flex flex-col md:flex-row gap-8">
@@ -86,7 +92,7 @@ const Profile = () => {
           <div>
             <label className="block text-gray-700 font-bold mb-1">Số điện thoại</label>
             <input type="tel" value={profile.phone} required className="w-full border p-3 rounded bg-gray-50 focus:bg-white" 
-              onChange={(e) => setProfile({...profile, phone: e.target.value})} />
+              onChange={handlePhoneChange} />
           </div>
           <div>
             <label className="block text-gray-700 font-bold mb-1">Địa chỉ mặc định</label>
