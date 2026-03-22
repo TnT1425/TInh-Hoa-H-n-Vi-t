@@ -8,6 +8,14 @@ const Checkout = () => {
   const { cart, clearCart } = useContext(CartContext);
   const navigate = useNavigate();
   const [shippingInfo, setShippingInfo] = useState({ fullName: '', phone: '', address: '' });
+
+  const handlePhoneChange = (e) => {
+    const value = e.target.value.replace(/\D/g, ''); // Chỉ cho phép số
+    if (value.length <= 10) {
+      setShippingInfo({ ...shippingInfo, phone: value });
+    }
+  };
+
   useEffect(() => {
     const fetchUserProfile = async () => {
       const token = localStorage.getItem('token');
@@ -95,8 +103,8 @@ const Checkout = () => {
             </div>
             <div>
               <label className="block text-gray-700 font-bold mb-1">Số điện thoại liên hệ</label>
-              <input type="tel" required className="w-full border p-3 rounded bg-gray-50 focus:bg-white" placeholder="VD: 0912345678"
-                value={shippingInfo.phone} onChange={(e) => setShippingInfo({...shippingInfo, phone: e.target.value})} />
+              <input type="tel" required maxLength="10" className="w-full border p-3 rounded bg-gray-50 focus:bg-white" placeholder="VD: 0912345678"
+                value={shippingInfo.phone} onChange={handlePhoneChange} />
             </div>
             <div>
               <label className="block text-gray-700 font-bold mb-1">Địa chỉ giao hàng chi tiết</label>
