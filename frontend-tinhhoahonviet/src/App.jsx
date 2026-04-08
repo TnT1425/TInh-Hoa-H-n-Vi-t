@@ -28,7 +28,7 @@ const CustomerLayout = () => {
          <Outlet context={{ searchTerm }} />
       </div>
       <ChatBox />
-      <Footer /> {/* 👉 THẢ CÁI FOOTER VÀO ĐÂY */}
+      <Footer /> 
     </div>
   );
 };
