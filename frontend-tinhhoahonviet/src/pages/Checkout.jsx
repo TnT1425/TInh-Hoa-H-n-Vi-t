@@ -1,16 +1,28 @@
+
 import React, { useState, useContext, useEffect } from 'react';
 import { CartContext } from '../context/CartContext';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 
-
 const Checkout = () => {
-  const { cart, clearCart } = useContext(CartContext);
+  const { cart, clearSelectedCart } = useContext(CartContext);
   const navigate = useNavigate();
   const [shippingInfo, setShippingInfo] = useState({ fullName: '', phone: '', address: '' });
+  const [paymentMethod, setPaymentMethod] = useState('COD');
+
+  // BỘ LỌC QUAN TRỌNG: Chỉ lấy những món đã tích chọn
+  const checkoutItems = cart.filter(item => item.selected);
+  const totalPrice = checkoutItems.reduce((total, item) => total + item.price * item.qty, 0);
+
+  // Nếu truy cập thẳng vào trang checkout mà không có món nào được chọn, đẩy về giỏ hàng
+  useEffect(() => {
+    if (checkoutItems.length === 0) {
+      navigate('/cart');
+    }
+  }, [checkoutItems, navigate]);
 
   const handlePhoneChange = (e) => {
-    const value = e.target.value.replace(/\D/g, ''); // Chỉ cho phép số
+    const value = e.target.value.replace(/\D/g, ''); 
     if (value.length <= 10) {
       setShippingInfo({ ...shippingInfo, phone: value });
     }
@@ -24,7 +36,6 @@ const Checkout = () => {
           const res = await axios.get('http://localhost:5000/api/auth/profile', {
             headers: { Authorization: `Bearer ${token}`, token: `Bearer ${token}` }
           });
-
           setShippingInfo({
             fullName: res.data.name || '',
             phone: res.data.phone || '',
@@ -38,14 +49,9 @@ const Checkout = () => {
     fetchUserProfile();
   }, []);
 
-  const totalPrice = cart.reduce((total, item) => total + item.price * item.qty, 0);
-  const [paymentMethod, setPaymentMethod] = useState('COD');
-
-
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
     
-    // Kiểm tra xem khách đã đăng nhập chưa
     const token = localStorage.getItem('token');
     if (!token) {
       alert('Vui lòng đăng nhập tài khoản trước khi đặt hàng!');
@@ -59,7 +65,8 @@ const Checkout = () => {
         phone: shippingInfo.phone,
         address: shippingInfo.address,
         paymentMethod: paymentMethod,
-        items: cart.map(item => ({ 
+        // CHỈ gửi những món đã chọn lên API Đặt hàng
+        items: checkoutItems.map(item => ({ 
           product: item._id, 
           qty: item.qty, 
           name: item.name 
@@ -67,26 +74,20 @@ const Checkout = () => {
       };
 
       await axios.post('http://localhost:5000/api/orders', orderData, {
-        headers: { token: `Bearer ${token}`,
-        Authorization: `Bearer ${token}` }
+        headers: { token: `Bearer ${token}`, Authorization: `Bearer ${token}` }
       });
 
       alert(' Đặt hàng thành công!');
-      clearCart(); 
+      
+      // CHỈ xóa những món đã đặt ra khỏi giỏ hàng, giữ lại món chưa chọn
+      clearSelectedCart(); 
       navigate('/cart'); 
     } catch (error) {
       alert('❌ Lỗi đặt hàng: ' + (error.response?.data?.message || 'Vui lòng thử lại'));
     }
   };
 
-  if (cart.length === 0) {
-    return (
-      <div className="text-center mt-20">
-        <h2 className="text-2xl font-bold mb-4 text-gray-700">Giỏ hàng đang trống!</h2>
-        <Link to="/" className="text-red-600 underline text-lg font-semibold hover:text-red-800">Quay lại mua sắm</Link>
-      </div>
-    );
-  }
+  if (checkoutItems.length === 0) return null; // Tránh render nhấp nháy trước khi redirect
 
   return (
     <div className="container mx-auto p-4 mt-8">
@@ -111,25 +112,12 @@ const Checkout = () => {
               <textarea required className="w-full border p-3 rounded bg-gray-50 focus:bg-white h-24" placeholder="Số nhà, Tên đường, Phường/Xã..."
                 value={shippingInfo.address} onChange={(e) => setShippingInfo({...shippingInfo, address: e.target.value})}></textarea>
             </div>
-            {/* ==========================================
-            KHU VỰC CHỌN PHƯƠNG THỨC THANH TOÁN
-            ========================================== */}
+            
         <div className="mb-8 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="text-xl font-bold text-gray-800 mb-4 border-l-4 border-red-700 pl-3">
-            Phương thức thanh toán
-          </h3>
-          
+          <h3 className="text-xl font-bold text-gray-800 mb-4 border-l-4 border-red-700 pl-3">Phương thức thanh toán</h3>
           <div className="space-y-3">
-            {/* Lựa chọn 1: Tiền mặt (COD) */}
             <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all ${paymentMethod === 'COD' ? 'border-red-700 bg-red-50 shadow-sm' : 'border-gray-200 hover:bg-gray-50'}`}>
-              <input 
-                type="radio" 
-                name="payment" 
-                value="COD" 
-                checked={paymentMethod === 'COD'} 
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className="mr-4 w-5 h-5 accent-red-700"
-              />
+              <input type="radio" name="payment" value="COD" checked={paymentMethod === 'COD'} onChange={(e) => setPaymentMethod(e.target.value)} className="mr-4 w-5 h-5 accent-red-700" />
               <div className="flex items-center gap-3">
                 <span className="text-3xl">💵</span>
                 <div>
@@ -139,16 +127,8 @@ const Checkout = () => {
               </div>
             </label>
 
-            {/* Lựa chọn 2: Chuyển khoản QR */}
             <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all ${paymentMethod === 'Banking' ? 'border-blue-700 bg-blue-50 shadow-sm' : 'border-gray-200 hover:bg-gray-50'}`}>
-              <input 
-                type="radio" 
-                name="payment" 
-                value="Banking" 
-                checked={paymentMethod === 'Banking'} 
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className="mr-4 w-5 h-5 accent-blue-700"
-              />
+              <input type="radio" name="payment" value="Banking" checked={paymentMethod === 'Banking'} onChange={(e) => setPaymentMethod(e.target.value)} className="mr-4 w-5 h-5 accent-blue-700" />
               <div className="flex items-center gap-3">
                 <span className="text-3xl">🏦</span>
                 <div>
@@ -162,15 +142,11 @@ const Checkout = () => {
           {paymentMethod === 'Banking' && (
             <div className="mt-5 p-5 bg-white border-2 border-dashed border-blue-300 rounded-xl text-center">
               <h4 className="font-bold text-blue-800 mb-2 uppercase text-sm tracking-wide">Quét mã để thanh toán</h4>
-              
-              {/* API VIETQR TỰ ĐỘNG TẠO MÃ */}
-              {/* Cú pháp: https://img.vietqr.io/image/<Mã_Ngân_Hàng>-<Số_Tài_Khoản>-print.png?amount=<Số_Tiền>&addInfo=<Nội_Dung>&accountName=<Tên_Chủ_TK> */}
               <img 
                 src={`https://img.vietqr.io/image/MB-020520048668-print.png?amount=${totalPrice}&addInfo=Thanh toan don hang Tinh Hoa Hon Viet&accountName=TRAN NGOC TRUNG`} 
                 alt="QR Thanh Toán" 
                 className="mx-auto w-56 h-56 object-contain rounded-lg shadow-sm border border-gray-100"
               />
-              
               <div className="mt-4 text-left bg-blue-50 p-4 rounded-lg text-sm text-blue-900 border border-blue-100 grid grid-cols-3 gap-2">
                 <p className="col-span-1 text-gray-500 font-medium">Ngân hàng:</p>
                 <p className="col-span-2 font-bold">MB Bank</p>
@@ -194,7 +170,8 @@ const Checkout = () => {
         <div className="md:w-1/3 bg-orange-50 p-6 rounded-lg shadow-md h-fit border-t-4 border-yellow-500">
           <h2 className="text-xl font-bold mb-4 text-red-800">Đơn hàng của bạn</h2>
           <div className="max-h-60 overflow-y-auto mb-4 border-b border-orange-200 pb-4 pr-2">
-            {cart.map((item, index) => (
+            {/* Render các sản phẩm đã được lọc */}
+            {checkoutItems.map((item, index) => (
               <div key={index} className="flex justify-between items-center mb-4">
                 <div className="text-gray-700">
                   <span className="font-bold">{item.name}</span> <br/>

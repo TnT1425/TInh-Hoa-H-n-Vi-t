@@ -6,6 +6,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const Chat = require('./models/Chat');
 const userRoutes = require('./routes/userRoutes');
+const botService = require('./services/botService');
 
 const app = express();
 app.use(cors()); 
@@ -34,11 +35,11 @@ const io = new Server(server, {
 io.on('connection', (socket) => {
   console.log('🟢 Có người kết nối Chat:', socket.id);
 
-  socket.on('join_room', async ({ userId }) => {
+  socket.on('join_room', async ({ userId }) => { // mõi user 1 room
     socket.join(userId); 
     const chatHistory = await Chat.findOne({ userId });
     if (chatHistory) {
-      socket.emit('load_history', chatHistory.messages);
+      socket.emit('load_history', chatHistory.messages); // load lịch sử chat gưi fronetend
     }
   });
 
@@ -55,30 +56,28 @@ io.on('connection', (socket) => {
 
     io.to(userId).emit('receive_message', msgObj);
 
-    // 🤖 LÀM BOT TỰ ĐỘNG NẾU KHÁCH HỎI
+    // ==========================================
+    // 🤖 LÀM BOT AI THÔNG MINH (Thay thế đoạn if-else cũ)
+    // ==========================================
     if (sender === 'khach') {
-      const cauHoi = text.toLowerCase();
-      let botText = "";
-      if (cauHoi.includes('phí ship') || cauHoi.includes('vận chuyển')) {
-        botText = 'Dạ phí ship đồng giá toàn quốc là 30.000đ ạ. Miễn phí ship cho đơn từ 500k!';
-      } 
-      else if (cauHoi.includes('bảo quản') || cauHoi.includes('hạn sử dụng')) {
-        botText = 'Dạ các đặc sản bên em đều có hạn sử dụng từ 3-6 tháng. Hàng gửi đi luôn là lô mới nhất sản xuất trong tuần ạ!';
-      }
-      else if (cauHoi.includes('địa chỉ') || cauHoi.includes('ở đâu')) {
-        botText = 'Kho hàng chính của bên em ở Hà Nội. Nhưng bọn em hỗ trợ giao nhanh hỏa tốc toàn quốc ạ.';
-      }
+      try {
+        // Gọi hàm từ AI Service (truyền câu hỏi của khách vào)
+        const botText = await botService.getBotResponse(text);
 
-      if (botText) {
-        setTimeout(async () => {
-          const currentChat = await Chat.findOne({ userId });
-          if (currentChat) {
-            const botMsg = { sender: 'bot', text: botText, timestamp: new Date() };
-            currentChat.messages.push(botMsg);
-            await currentChat.save();
-            io.to(userId).emit('receive_message', botMsg);
-          }
-        }, 1000);
+        if (botText) {
+          // Tạo delay 1.5s - 2s để tạo cảm giác AI "đang gõ phím" cho chân thật
+          setTimeout(async () => {
+            const currentChat = await Chat.findOne({ userId });
+            if (currentChat) {
+              const botMsg = { sender: 'bot', text: botText, timestamp: new Date() };
+              currentChat.messages.push(botMsg);
+              await currentChat.save();
+              io.to(userId).emit('receive_message', botMsg);
+            }
+          }, 1500); 
+        }
+      } catch (err) {
+        console.log("Lỗi gửi tin nhắn Bot:", err);
       }
     }
   });

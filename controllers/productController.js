@@ -72,3 +72,54 @@ exports.getProductById = async (req, res) => {
     res.status(500).json({ message: 'Lỗi server khi lấy sản phẩm', error });
   }
 };
+
+
+// --- THUẬT TOÁN TẠO REGEX CHO TỪNG TỪ ---
+const createWordRegex = (word) => {
+  // Biến 1 từ (VD: "thanh") thành mảng các ký tự linh hoạt hỗ trợ tiếng Việt
+  const regexArray = word.toLowerCase().split('').map(char => {
+    if ('aáàạảãâấầậẩẫăắằặẳẵ'.includes(char)) return '[aáàạảãâấầậẩẫăắằặẳẵ]';
+    if ('eéèẹẻẽêếềệểễ'.includes(char)) return '[eéèẹẻẽêếềệểễ]';
+    if ('iíìịỉĩ'.includes(char)) return '[iíìịỉĩ]';
+    if ('oóòọỏõôốồộổỗơớờợởỡ'.includes(char)) return '[oóòọỏõôốồộổỗơớờợởỡ]';
+    if ('uúùụủũưứừựửữ'.includes(char)) return '[uúùụủũưứừựửữ]';
+    if ('yýỳỵỷỹ'.includes(char)) return '[yýỳỵỷỹ]';
+    if ('dđ'.includes(char)) return '[dđ]';
+    
+    // Thêm // để an toàn nếu khách vô tình gõ các ký tự đặc biệt của code
+    if ('\\[]^$*+?.()|{}'.includes(char)) return `\\${char}`; 
+    return char;
+  });
+  return regexArray.join('');
+};
+
+// [TÍNH NĂNG TÌM KIẾM TỐI ƯU 3.0 - BAO CHUẨN]
+exports.searchProducts = async (req, res) => {
+  try {
+    const keyword = req.query.q; 
+    
+    if (!keyword || keyword.trim() === "") {
+      return res.status(200).json([]);
+    }
+
+    // 1. Tách chuỗi khách gõ thành các từ riêng biệt (VD: "nem thanh" -> ["nem", "thanh"])
+    // Hàm filter(Boolean) giúp loại bỏ các khoảng trắng thừa nếu khách bấm nhầm nhiều dấu cách
+    const words = keyword.trim().split(/\s+/).filter(Boolean);
+
+    // 2. Tạo mảng điều kiện: Ép MongoDB phải tìm thấy TẤT CẢ các từ trong mảng
+    const andConditions = words.map(word => ({
+      name: { $regex: createWordRegex(word), $options: "i" }
+    }));
+
+    // 3. Tìm kiếm với toán tử $and
+    const products = await Product.find({
+      $and: andConditions
+    })
+    .limit(8)
+    .sort({ sold: -1 });
+
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ message: 'Lỗi thuật toán tìm kiếm', error: err.message });
+  }
+};

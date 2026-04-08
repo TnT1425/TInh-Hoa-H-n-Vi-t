@@ -4,7 +4,7 @@ import io from 'socket.io-client';
 const socket = io('http://localhost:5000');
 
 const ChatBox = () => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token');// lấy id của người dùng
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [currentMessage, setCurrentMessage] = useState("");
@@ -13,7 +13,7 @@ const ChatBox = () => {
   useEffect(() => {
     if (token) {
       try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
+        const payload = JSON.parse(atob(token.split('.')[1])); // ----------------------------------------------------------------------------------------------------------
         setUserId(payload.id || payload._id);
       } catch (err) {}
     }

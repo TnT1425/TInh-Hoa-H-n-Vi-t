@@ -1,7 +1,7 @@
 // File: routes/userRoutes.js
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User'); // Nhớ trỏ đúng đường dẫn tới model User của bạn
+const User = require('../models/User'); 
 const { verifyToken, verifyAdminOrStaff } = require('../middlewares/authMiddleware');
 
 // 1. Lấy danh sách TẤT CẢ tài khoản (Chỉ Admin/Staff mới được xem)
@@ -15,12 +15,12 @@ router.get('/', verifyToken, verifyAdminOrStaff, async (req, res) => {
   }
 });
 
-// 2. Cấp quyền hoặc tước quyền (Đổi role)
+// 2. đổi quyền
 router.put('/:id/role', verifyToken, verifyAdminOrStaff, async (req, res) => {
   try {
     const user = await User.findByIdAndUpdate(
       req.params.id, 
-      { role: req.body.role }, // role có thể là 'admin', 'staff', hoặc 'customer'
+      { role: req.body.role }, 
       { new: true }
     ).select('-password');
     res.json({ message: 'Đã cập nhật quyền thành công!', user });
@@ -29,7 +29,7 @@ router.put('/:id/role', verifyToken, verifyAdminOrStaff, async (req, res) => {
   }
 });
 
-// 3. Xóa tài khoản (Khóa vĩnh viễn)
+// 3. Xóa tài khoản 
 router.delete('/:id', verifyToken, verifyAdminOrStaff, async (req, res) => {
   try {
     await User.findByIdAndDelete(req.params.id);
