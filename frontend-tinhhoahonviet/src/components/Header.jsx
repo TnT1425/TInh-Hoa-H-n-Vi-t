@@ -1,4 +1,6 @@
 
+
+
 import React, { useContext, useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
@@ -7,6 +9,7 @@ import axios from 'axios';
 
 const Header = () => {
   const navigate = useNavigate();
+  // Lấy thông tin user từ localStorage (sẽ chứa role nếu lúc đăng nhập Backend có trả về)
   const user = JSON.parse(localStorage.getItem('user'));
   const { cart } = useContext(CartContext);
 
@@ -23,7 +26,6 @@ const Header = () => {
   };
 
   // --- THUẬT TOÁN DEBOUNCE TÌM KIẾM ---
-  // useCallback giúp lưu hàm này vào bộ nhớ, không bị tạo lại mỗi khi giao diện render
   const fetchSearchResults = useCallback(
     debounce(async (query) => {
       if (!query || query.trim().length < 1) {
@@ -34,7 +36,6 @@ const Header = () => {
       
       try {
         setIsSearching(true);
-        // Lưu ý: Thay đổi URL baseURL nếu bạn setup axios instance riêng
         const response = await axios.get(`http://localhost:5000/api/products/search/all?q=${query}`);
         setSearchResults(response.data);
       } catch (error) {
@@ -42,14 +43,13 @@ const Header = () => {
       } finally {
         setIsSearching(false);
       }
-    }, 500), // Đợi 500ms (nửa giây) sau khi ngừng gõ mới gọi API
+    }, 500), 
     []
   );
 
   // Lắng nghe sự thay đổi của searchTerm
   useEffect(() => {
     fetchSearchResults(searchTerm);
-    // Cleanup function để hủy debounce nếu component bị unmount
     return () => fetchSearchResults.cancel();
   }, [searchTerm, fetchSearchResults]);
 
@@ -118,6 +118,17 @@ const Header = () => {
               </div>
               <div className="absolute right-0 top-full pt-2 w-48 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top translate-y-2 group-hover:translate-y-0">
                 <div className="bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden">
+                  
+                  {/* =========================================================
+                      [CODE MỚI THÊM] NÚT QUẢN TRỊ DÀNH CHO ADMIN VÀ NHÂN VIÊN
+                      ========================================================= */}
+                  {user?.role && (user.role.toUpperCase() === 'ADMIN' || user.role.toUpperCase() === 'STAFF') && (
+                    <Link to="/admin/orders" className="block px-4 py-3 text-sm font-bold text-blue-800 bg-blue-50 hover:bg-blue-100 hover:text-blue-900 transition border-b border-blue-100">
+                       Trang Quản Trị
+                    </Link>
+                  )}
+
+                  {/* NÚT CỦA KHÁCH HÀNG BÌNH THƯỜNG */}
                   <Link to="/profile" className="block px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-red-50 hover:text-red-700 transition">Hồ sơ cá nhân</Link>
                   <Link to="/my-orders" className="block px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-red-50 hover:text-red-700 transition">Đơn của tôi</Link>
                   <div className="border-t border-gray-100"></div>
